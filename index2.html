@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日報作成 | Daily Report</title>
+    <!-- Google Fonts: Noto Sans JP -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS (CDN for styling) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #f0f2f5; /* Google-like light grey background */
+            color: #202124;
+        }
+        .google-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+        }
+        .input-group label {
+            color: #5f6368;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        .google-input {
+            width: 100%;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            padding: 10px 12px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+            outline: none;
+        }
+        .google-input:focus {
+            border-color: #1a73e8;
+            border-width: 2px;
+            padding: 9px 11px; /* Adjust for border width change */
+        }
+        .section-title {
+            color: #202124;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #1a73e8;
+            padding-left: 12px;
+            display: flex;
+            align-items: center;
+        }
+        .btn-primary {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+        .btn-primary:hover {
+            background-color: #1765cc;
+            box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+        }
+        /* Layout utility for time inputs */
+        .task-row {
+            display: grid;
+            grid-template-columns: 1fr 100px;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        @media (max-width: 640px) {
+            .task-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body class="py-8 px-4">
+
+    <div class="max-w-2xl mx-auto">
+        <!-- Header -->
+        <header class="mb-6 text-center">
+            <h1 class="text-2xl font-bold text-gray-800">日報作成</h1>
+            <p class="text-gray-500 text-sm mt-1">Daily Report Generator</p>
+        </header>
+
+        <form id="reportForm" class="space-y-6">
+
+            <!-- Section 1: Today's Tasks -->
+            <div class="google-card p-6">
+                <h2 class="section-title">① 今日の業務</h2>
+                
+                <!-- Meeting -->
+                <div class="mb-4">
+                    <div class="flex justify-between items-end mb-2">
+                        <label>会議・打ち合わせ</label>
+                    </div>
+                    <div class="task-row">
+                        <input type="text" id="task_meeting_desc" class="google-input" placeholder="例：週次定例、プロジェクトX進捗会議">
+                        <div class="flex items-center">
+                            <input type="number" id="task_meeting_time" class="google-input time-input" step="0.5" placeholder="時間" oninput="calcTotal()">
+                            <span class="ml-2 text-gray-600">h</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Routine -->
+                <div class="mb-4">
+                    <label>定例業務</label>
+                    <div class="task-row">
+                        <input type="text" id="task_routine_desc" class="google-input" placeholder="例：メールチェック、日次データ集計">
+                        <div class="flex items-center">
+                            <input type="number" id="task_routine_time" class="google-input time-input" step="0.5" placeholder="時間" oninput="calcTotal()">
+                            <span class="ml-2 text-gray-600">h</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Non-Routine -->
+                <div class="mb-4">
+                    <label>非定例業務</label>
+                    <div class="task-row">
+                        <input type="text" id="task_nonroutine_desc" class="google-input" placeholder="例：企画書作成、トラブル対応">
+                        <div class="flex items-center">
+                            <input type="number" id="task_nonroutine_time" class="google-input time-input" step="0.5" placeholder="時間" oninput="calcTotal()">
+                            <span class="ml-2 text-gray-600">h</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Time Display -->
+                <div class="mt-4 pt-4 border-t border-gray-200 flex justify-end items-center">
+                    <span class="text-gray-600 mr-4 font-bold">合計業務時間:</span>
+                    <span id="total_display" class="text-2xl font-bold text-blue-600">0</span>
+                    <span class="text-gray-600 ml-1">h</span>
+                </div>
+            </div>
+
+            <!-- Section 2: Tomorrow's Tasks -->
+            <div class="google-card p-6">
+                <h2 class="section-title">② 明日のタスク</h2>
+                <div class="input-group">
+                    <textarea id="tomorrow_task" class="google-input h-24 resize-y" placeholder="明日の予定を入力してください"></textarea>
+                </div>
+            </div>
+
+            <!-- Section 3: Comments -->
+            <div class="google-card p-6">
+                <h2 class="section-title">③ コメント・所感</h2>
+                <div class="input-group">
+                    <textarea id="comments" class="google-input h-24 resize-y" placeholder="気付きや共有事項があれば入力してください"></textarea>
+                </div>
+            </div>
+
+            <!-- Section 4: Overtime -->
+            <div class="google-card p-6">
+                <h2 class="section-title">④ 残業時間管理</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="input-group">
+                        <label>本日の残業時間</label>
+                        <div class="flex items-center">
+                            <input type="number" id="ot_today" class="google-input" step="0.5" placeholder="0">
+                            <span class="ml-2 text-gray-600">h</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>今月の累計残業</label>
+                        <div class="flex items-center">
+                            <input type="number" id="ot_month" class="google-input" step="0.5" placeholder="0">
+                            <span class="ml-2 text-gray-600">h</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>36協定対象累計</label>
+                        <div class="flex items-center">
+                            <input type="number" id="ot_36" class="google-input" step="0.5" placeholder="0">
+                            <span class="ml-2 text-gray-600">h</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Button -->
+            <div class="text-center pt-4 pb-12">
+                <button type="button" onclick="generateMail()" class="btn-primary flex items-center justify-center mx-auto text-lg w-full md:w-auto md:px-12">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    日報メールを作成
+                </button>
+                <p class="text-xs text-gray-400 mt-4">お使いのメールソフトが起動します</p>
+            </div>
+
+        </form>
+    </div>
+
+    <script>
+        // Calculate Total Time
+        function calcTotal() {
+            const meeting = parseFloat(document.getElementById('task_meeting_time').value) || 0;
+            const routine = parseFloat(document.getElementById('task_routine_time').value) || 0;
+            const nonRoutine = parseFloat(document.getElementById('task_nonroutine_time').value) || 0;
+            
+            const total = meeting + routine + nonRoutine;
+            document.getElementById('total_display').textContent = total;
+        }
+
+        // Generate Mailto Link
+        function generateMail() {
+            // Get values
+            const meetingDesc = document.getElementById('task_meeting_desc').value;
+            const meetingTime = document.getElementById('task_meeting_time').value;
+            
+            const routineDesc = document.getElementById('task_routine_desc').value;
+            const routineTime = document.getElementById('task_routine_time').value;
+            
+            const nonRoutineDesc = document.getElementById('task_nonroutine_desc').value;
+            const nonRoutineTime = document.getElementById('task_nonroutine_time').value;
+            
+            const totalTime = document.getElementById('total_display').textContent;
+            
+            const tomorrowTask = document.getElementById('tomorrow_task').value;
+            const comments = document.getElementById('comments').value;
+            
+            const otToday = document.getElementById('ot_today').value || "0";
+            const otMonth = document.getElementById('ot_month').value || "0";
+            const ot36 = document.getElementById('ot_36').value || "0";
+
+            // Format Body
+            // Using specific format for readability
+            let body = "";
+            body += "お疲れ様です。本日の日報を送付いたします。\n\n";
+            
+            body += "【① 本日の業務】\n";
+            body += `--------------------------------------------------\n`;
+            if(meetingDesc || meetingTime) body += `■会議・定例: ${meetingTime || 0}h\n${meetingDesc}\n\n`;
+            if(routineDesc || routineTime) body += `■定例業務　: ${routineTime || 0}h\n${routineDesc}\n\n`;
+            if(nonRoutineDesc || nonRoutineTime) body += `■非定例業務: ${nonRoutineTime || 0}h\n${nonRoutineDesc}\n\n`;
+            body += `--------------------------------------------------\n`;
+            body += `★合計稼働時間: ${totalTime}h\n\n`;
+
+            body += "【② 明日のタスク】\n";
+            body += `--------------------------------------------------\n`;
+            body += `${tomorrowTask}\n\n`;
+
+            body += "【③ コメント】\n";
+            body += `--------------------------------------------------\n`;
+            body += `${comments}\n\n`;
+
+            body += "【④ 残業管理】\n";
+            body += `--------------------------------------------------\n`;
+            body += `本日の残業　　: ${otToday}h\n`;
+            body += `今月の累計　　: ${otMonth}h\n`;
+            body += `36協定対象累計: ${ot36}h\n`;
+            body += `--------------------------------------------------\n`;
+
+            // Create mailto link
+            const subject = "日報_" + new Date().toLocaleDateString('ja-JP');
+            const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+            // Open mail client
+            window.location.href = mailtoLink;
+        }
+    </script>
+</body>
+</html>
+
